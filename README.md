@@ -5,7 +5,7 @@
 [![Matplotlib](https://img.shields.io/badge/Matplotlib-visualization-11557c)](https://matplotlib.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-**[🌐 View the live project page →](https://YOUR_USERNAME.github.io/weather-data-analyzer/)**
+**[🌐 View the live project page →](https://sarthakratnasingh.github.io/weather-data-analyzer/)**
 
 A Python + Pandas project analyzing 10 years (2016-2025) of daily temperature
 and rainfall data for New Delhi, India — built to explore how the city's
