@@ -7,7 +7,7 @@
 
 **[🌐 View the live project page →](https://sarthakratnasingh.github.io/weather-data-analyzer/)**
 
-A Python + Pandas project analyzing 10 years (2016-2025) of daily temperature
+A Python + Pandas project analyzing 10 years (2016-2026) of daily temperature
 and rainfall data for New Delhi, India — built to explore how the city's
 climate has behaved over the last decade, with a focus on monsoon
 variability and warming trends.
@@ -86,7 +86,7 @@ realistic synthetic dataset, then continue from step 3.
 ## Key findings (sample data, 2016-2025)
 
 - **Warming trend:** Average yearly temperature rose from 24.79°C (2016) to
-  25.22°C (2025) — a gradual increase consistent with regional warming
+  25.22°C (2026) — a gradual increase consistent with regional warming
   trends, though the year-to-year variation is larger than the trend itself.
 - **Monsoon dominates the rain calendar:** June through September account
   for the overwhelming majority of annual rainfall (e.g. Sep alone averages
