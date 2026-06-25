@@ -63,7 +63,12 @@ def load_data() -> pd.DataFrame:
     return df
 
 
-def plot_yearly_temp_trend(df: pd.DataFrame):
+def get_year_range_label(df: pd.DataFrame) -> str:
+    """Returns a label like '2016-2026' based on the actual data range."""
+    return f"{df['year'].min()}-{df['year'].max()}"
+
+
+def plot_yearly_temp_trend(df: pd.DataFrame, year_range: str):
     yearly = df.groupby("year")["temp_mean_c"].mean()
     years = yearly.index.values
     temps = yearly.values
@@ -76,7 +81,7 @@ def plot_yearly_temp_trend(df: pd.DataFrame):
     ax.plot(years, trend_line, linestyle="--", color=COLOR_TREND, linewidth=1.6,
             label=f"Trend: {slope:+.3f} \u00b0C/year")
 
-    ax.set_title("New Delhi: Yearly Average Temperature (2016-2025)")
+    ax.set_title(f"New Delhi: Yearly Average Temperature ({year_range})")
     ax.set_xlabel("Year")
     ax.set_ylabel("Avg Temperature (\u00b0C)")
     ax.xaxis.set_major_locator(mticker.MaxNLocator(integer=True))
@@ -86,7 +91,7 @@ def plot_yearly_temp_trend(df: pd.DataFrame):
     plt.close(fig)
 
 
-def plot_monthly_climatology(df: pd.DataFrame):
+def plot_monthly_climatology(df: pd.DataFrame, year_range: str):
     monthly = df.groupby("month_name", observed=True).agg(
         avg_max=("temp_max_c", "mean"),
         avg_mean=("temp_mean_c", "mean"),
@@ -103,7 +108,7 @@ def plot_monthly_climatology(df: pd.DataFrame):
 
     ax.set_xticks(x)
     ax.set_xticklabels(MONTH_ORDER)
-    ax.set_title("New Delhi: Monthly Temperature Climatology (2016-2025 avg)")
+    ax.set_title(f"New Delhi: Monthly Temperature Climatology ({year_range} avg)")
     ax.set_ylabel("Temperature (\u00b0C)")
     ax.legend(frameon=False)
     fig.tight_layout()
@@ -111,7 +116,7 @@ def plot_monthly_climatology(df: pd.DataFrame):
     plt.close(fig)
 
 
-def plot_monthly_rainfall(df: pd.DataFrame):
+def plot_monthly_rainfall(df: pd.DataFrame, year_range: str):
     monthly_rain = df.groupby("month_name", observed=True)["precipitation_mm"].sum().reindex(MONTH_ORDER)
     n_years = df["year"].nunique()
     monthly_avg_rain = monthly_rain / n_years
@@ -124,7 +129,7 @@ def plot_monthly_rainfall(df: pd.DataFrame):
     for i in monsoon_idx:
         bars[i].set_color("#0b4f8a")
 
-    ax.set_title("New Delhi: Average Monthly Rainfall (2016-2025)")
+    ax.set_title(f"New Delhi: Average Monthly Rainfall ({year_range})")
     ax.set_ylabel("Avg Rainfall (mm)")
     ax.text(0.02, 0.95, "Darker bars = monsoon months (Jun-Sep)", transform=ax.transAxes,
             fontsize=9, color="#495057", va="top")
@@ -133,7 +138,7 @@ def plot_monthly_rainfall(df: pd.DataFrame):
     plt.close(fig)
 
 
-def plot_temp_heatmap(df: pd.DataFrame):
+def plot_temp_heatmap(df: pd.DataFrame, year_range: str):
     pivot = df.pivot_table(values="temp_mean_c", index="year", columns="month_name",
                             aggfunc="mean", observed=True)
     pivot = pivot.reindex(columns=MONTH_ORDER)
@@ -161,7 +166,7 @@ def plot_temp_heatmap(df: pd.DataFrame):
     plt.close(fig)
 
 
-def plot_yearly_rainfall(df: pd.DataFrame):
+def plot_yearly_rainfall(df: pd.DataFrame, year_range: str):
     yearly_rain = df.groupby("year")["precipitation_mm"].sum()
     avg_rain = yearly_rain.mean()
 
@@ -169,9 +174,9 @@ def plot_yearly_rainfall(df: pd.DataFrame):
     colors = [COLOR_RAIN if v >= avg_rain else "#a5d8ff" for v in yearly_rain.values]
     ax.bar(yearly_rain.index.astype(str), yearly_rain.values, color=colors, width=0.6)
     ax.axhline(avg_rain, linestyle="--", color=COLOR_TREND, linewidth=1.5,
-               label=f"10-yr avg: {avg_rain:.0f} mm")
+               label=f"avg: {avg_rain:.0f} mm")
 
-    ax.set_title("New Delhi: Total Annual Rainfall (2016-2025)")
+    ax.set_title(f"New Delhi: Total Annual Rainfall ({year_range})")
     ax.set_ylabel("Total Rainfall (mm)")
     ax.legend(frameon=False)
     fig.tight_layout()
@@ -179,7 +184,7 @@ def plot_yearly_rainfall(df: pd.DataFrame):
     plt.close(fig)
 
 
-def plot_temp_rain_scatter(df: pd.DataFrame):
+def plot_temp_rain_scatter(df: pd.DataFrame, year_range: str):
     fig, ax = plt.subplots(figsize=(8, 6))
     scatter = ax.scatter(df["temp_mean_c"], df["precipitation_mm"],
                           c=df["month"], cmap="twilight_shifted", alpha=0.5, s=14)
@@ -203,19 +208,20 @@ def plot_temp_rain_scatter(df: pd.DataFrame):
 def main():
     FIG_DIR.mkdir(parents=True, exist_ok=True)
     df = load_data()
+    year_range = get_year_range_label(df)
 
-    print("Generating charts...")
-    plot_yearly_temp_trend(df)
+    print(f"Generating charts for {year_range}...")
+    plot_yearly_temp_trend(df, year_range)
     print("  1/6 Yearly temperature trend")
-    plot_monthly_climatology(df)
+    plot_monthly_climatology(df, year_range)
     print("  2/6 Monthly temperature climatology")
-    plot_monthly_rainfall(df)
+    plot_monthly_rainfall(df, year_range)
     print("  3/6 Monthly rainfall")
-    plot_temp_heatmap(df)
+    plot_temp_heatmap(df, year_range)
     print("  4/6 Temperature heatmap")
-    plot_yearly_rainfall(df)
+    plot_yearly_rainfall(df, year_range)
     print("  5/6 Yearly rainfall")
-    plot_temp_rain_scatter(df)
+    plot_temp_rain_scatter(df, year_range)
     print("  6/6 Temp vs rainfall scatter")
 
     print(f"\nAll charts saved to {FIG_DIR}")
