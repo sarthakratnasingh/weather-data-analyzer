@@ -1,0 +1,58 @@
+NEW DELHI WEATHER ANALYSIS SUMMARY
+============================================================
+
+YEARLY SUMMARY
+      avg_temp_c  max_temp_c  min_temp_c  total_rainfall_mm  rainy_days
+year                                                                   
+2016       25.33        38.9         8.4              663.4          59
+2017       24.82        44.0         4.2              584.1          80
+2018       24.52        43.0         4.8              706.3          99
+2019       24.30        44.1         2.0              625.3          85
+2020       24.01        44.2         2.9              585.3          76
+2021       24.47        43.2         3.5              816.2          84
+2022       24.78        45.3         4.7              731.4          73
+2023       24.10        43.6         3.2              860.5          94
+2024       24.78        46.0         3.8             1101.0          83
+2025       25.25        43.7         7.7              716.0          90
+2026       25.29        44.4         4.8              147.7          24
+
+MONTHLY CLIMATOLOGY
+            avg_temp_c  avg_max_temp_c  avg_min_temp_c  avg_rainfall_mm  total_rainfall_mm
+month_name                                                                                
+Jan              12.84           19.03            8.02             1.15              357.1
+Feb              17.28           23.89           11.59             0.68              191.2
+Mar              22.83           29.78           16.52             0.73              226.7
+Apr              29.31           36.49           22.21             0.28               82.8
+May              31.92           38.51           25.59             1.16              358.4
+Jun              32.84           38.14           27.68             2.23              670.9
+Jul              29.91           33.70           26.74             7.63             2364.9
+Aug              28.93           32.45           26.15             5.43             1681.9
+Sep              28.44           32.58           24.90             4.24             1273.3
+Oct              25.65           31.77           20.13             0.63              195.2
+Nov              20.36           26.89           14.66             0.20               61.0
+Dec              15.00           21.52            9.63             0.24               73.8
+
+TEMPERATURE TREND: {'slope_c_per_year': np.float64(0.0243), 'total_change_over_period_c': np.float64(0.24), 'period': '2016-2026'}
+
+RAINFALL TREND: {'slope_mm_per_year': np.float64(-2.28), 'total_change_over_period_mm': np.float64(-22.8), 'period': '2016-2026'}
+
+EXTREMES
+hottest_day: (datetime.date(2024, 5, 26), np.float64(46.0))
+coldest_day: (datetime.date(2019, 12, 31), np.float64(2.0))
+wettest_day: (datetime.date(2021, 7, 19), np.float64(122.7))
+
+TEMP-RAINFALL CORRELATION: 0.083
+
+MONSOON (Jun-Sep) RAINFALL BY YEAR
+year
+2016    652.0
+2017    480.8
+2018    623.0
+2019    477.1
+2020    372.2
+2021    577.7
+2022    519.5
+2023    671.9
+2024    990.2
+2025    606.5
+2026     20.1

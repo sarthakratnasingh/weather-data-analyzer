@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>New Delhi Weather Analyzer — Sahil's Data Project</title>
+<meta name="description" content="A Python + Pandas analysis of 10 years of New Delhi temperature and rainfall data." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --ink:#1a1410;
+    --paper:#fdf8f0;
+    --paper-dim:#f5eee0;
+    --heat:#d4530a;
+    --heat-soft:#e8b04b;
+    --rain:#1c5d8c;
+    --rain-soft:#7da9c4;
+    --line:#e2d8c4;
+    --gradient: linear-gradient(90deg, var(--heat) 0%, var(--heat-soft) 45%, var(--rain-soft) 70%, var(--rain) 100%);
+  }
+
+  *{box-sizing:border-box;}
+
+  html{scroll-behavior:smooth;}
+
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  h1,h2,h3{
+    font-family:'Space Grotesk', sans-serif;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+
+  .mono{
+    font-family:'IBM Plex Mono', monospace;
+  }
+
+  a{color:var(--rain);}
+
+  .wrap{
+    max-width:1080px;
+    margin:0 auto;
+    padding:0 28px;
+  }
+
+  /* ---------- nav ---------- */
+  nav{
+    position:sticky; top:0; z-index:10;
+    background:rgba(253,248,240,0.92);
+    backdrop-filter: blur(6px);
+    border-bottom:1px solid var(--line);
+  }
+  nav .wrap{
+    display:flex; align-items:center; justify-content:space-between;
+    height:60px;
+  }
+  nav .brand{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    font-size:1rem;
+  }
+  nav .links{
+    display:flex; gap:24px;
+    font-size:0.85rem;
+  }
+  nav .links a{
+    color:var(--ink);
+    text-decoration:none;
+    font-weight:500;
+    opacity:0.7;
+    transition:opacity .15s;
+  }
+  nav .links a:hover{opacity:1;}
+
+  @media (max-width: 560px){
+    nav .links a.hide-mobile{display:none;}
+    nav .links{gap:14px;}
+  }
+
+  /* ---------- hero ---------- */
+  .gradient-bar{
+    height:6px;
+    background:var(--gradient);
+  }
+
+  header.hero{
+    padding:88px 0 56px;
+  }
+
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.78rem;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--heat);
+    margin-bottom:18px;
+  }
+
+  .hero h1{
+    font-size:clamp(2.2rem, 5.5vw, 3.6rem);
+    line-height:1.05;
+    font-weight:700;
+    max-width:780px;
+  }
+
+  .hero .stat-highlight{
+    background:linear-gradient(90deg, var(--heat), var(--heat-soft));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+
+  .hero p.lede{
+    font-size:1.08rem;
+    color:#46403a;
+    max-width:620px;
+    margin-top:22px;
+    line-height:1.6;
+  }
+
+  .hero-ctas{
+    margin-top:34px;
+    display:flex;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+
+  .btn{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:11px 20px;
+    border-radius:6px;
+    font-weight:600;
+    font-size:0.92rem;
+    text-decoration:none;
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .btn:hover{transform:translateY(-1px);}
+  .btn-primary{
+    background:var(--ink);
+    color:var(--paper);
+  }
+  .btn-secondary{
+    background:transparent;
+    color:var(--ink);
+    border:1.5px solid var(--ink);
+  }
+
+  /* ---------- temperature timeline strip ---------- */
+  .timeline-section{
+    padding:10px 0 60px;
+  }
+  .timeline-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.75rem;
+    color:#6b6358;
+    margin-bottom:10px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+  }
+  .timeline{
+    display:flex;
+    border:1px solid var(--line);
+    border-radius:8px;
+    overflow:hidden;
+  }
+  .timeline .month{
+    flex:1 1 0;
+    padding:14px 6px 10px;
+    text-align:center;
+    border-right:1px solid rgba(255,255,255,0.25);
+    position:relative;
+    min-width:0;
+  }
+  .timeline .month:last-child{border-right:none;}
+  .timeline .month .m-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.68rem;
+    color:rgba(0,0,0,0.55);
+    display:block;
+  }
+  .timeline .month .m-temp{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    font-size:1.05rem;
+    color:#1a1410;
+    display:block;
+    margin-top:4px;
+  }
+
+  /* ---------- sections ---------- */
+  section{
+    padding:64px 0;
+    border-top:1px solid var(--line);
+  }
+
+  .section-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom:32px;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+
+  .section-head h2{
+    font-size:1.7rem;
+  }
+
+  .section-head .section-num{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.8rem;
+    color:#9a9286;
+  }
+
+  /* ---------- stat grid ---------- */
+  .stat-grid{
+    display:flex;
+    flex-wrap:wrap;
+    gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+    border-radius:8px;
+    overflow:hidden;
+  }
+  .stat-card{
+    background:var(--paper);
+    padding:24px;
+    flex:1 1 220px;
+  }
+  .stat-card .stat-value{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:2rem;
+    font-weight:700;
+  }
+  .stat-card .stat-value.heat{color:var(--heat);}
+  .stat-card .stat-value.rain{color:var(--rain);}
+  .stat-card .stat-label{
+    font-size:0.85rem;
+    color:#6b6358;
+    margin-top:6px;
+    line-height:1.4;
+  }
+
+  /* ---------- chart grid ---------- */
+  .chart-grid{
+    display:flex;
+    flex-wrap:wrap;
+    gap:24px;
+  }
+  .chart-card{
+    background:white;
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+    flex:1 1 calc(50% - 12px);
+    min-width:280px;
+  }
+  .chart-card img{
+    width:100%;
+    display:block;
+  }
+  .chart-card .caption{
+    padding:16px 18px 18px;
+  }
+  .chart-card .caption h3{
+    font-size:1rem;
+    font-weight:600;
+  }
+  .chart-card .caption p{
+    font-size:0.88rem;
+    color:#6b6358;
+    margin:6px 0 0;
+    line-height:1.5;
+  }
+  .chart-card.full{flex:1 1 100%;}
+
+  @media (max-width: 760px){
+    .chart-card{flex:1 1 100%;}
+    .timeline{flex-wrap:wrap;}
+    .timeline .month{flex:1 1 16.66%; padding:10px 4px 8px;}
+    .stat-card{flex:1 1 calc(50% - 1px);}
+  }
+
+  /* ---------- methodology ---------- */
+  .method-list{
+    list-style:none;
+    margin:0; padding:0;
+    display:grid;
+    gap:18px;
+  }
+  .method-list li{
+    display:grid;
+    grid-template-columns: 28px 1fr;
+    gap:14px;
+    align-items:start;
+  }
+  .method-list .dot{
+    width:10px; height:10px;
+    border-radius:50%;
+    background:var(--heat);
+    margin-top:6px;
+  }
+  .method-list strong{font-weight:600;}
+  .method-list span.desc{
+    color:#46403a;
+    font-size:0.95rem;
+    line-height:1.6;
+  }
+
+  pre{
+    background:#1a1410;
+    color:#f0ead9;
+    padding:18px 20px;
+    border-radius:8px;
+    overflow-x:auto;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.85rem;
+    line-height:1.6;
+  }
+
+  /* ---------- footer ---------- */
+  footer{
+    padding:48px 0 64px;
+    border-top:1px solid var(--line);
+  }
+  footer .wrap{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:16px;
+  }
+  footer p{
+    font-size:0.85rem;
+    color:#6b6358;
+    margin:0;
+  }
+  footer .footer-links{
+    display:flex; gap:18px;
+  }
+  footer .footer-links a{
+    color:var(--ink);
+    text-decoration:none;
+    font-size:0.85rem;
+    font-weight:500;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand">delhi-weather-analyzer</div>
+    <div class="links">
+      <a href="#findings" class="hide-mobile">Findings</a>
+      <a href="#charts" class="hide-mobile">Charts</a>
+      <a href="#method" class="hide-mobile">Method</a>
+      <a href="https://github.com/YOUR_USERNAME/weather-data-analyzer" target="_blank">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<div class="gradient-bar"></div>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Python · Pandas · Matplotlib — 10-Year Climate Study</div>
+    <h1>New Delhi's monsoon swung <span class="stat-highlight">75% wider</span> in rainfall between its driest and wettest year.</h1>
+    <p class="lede">
+      A ground-up analysis of a decade of daily temperature and rainfall data for
+      New Delhi — built to answer one question: how stable is the city's climate
+      really, year over year?
+    </p>
+    <div class="hero-ctas">
+      <a class="btn btn-primary" href="https://github.com/YOUR_USERNAME/weather-data-analyzer" target="_blank">View source on GitHub</a>
+      <a class="btn btn-secondary" href="#charts">Jump to charts</a>
+    </div>
+  </div>
+</header>
+
+<div class="timeline-section">
+  <div class="wrap">
+    <div class="timeline-label">Avg. mean temperature by month (°C, 2016–2025)</div>
+    <div class="timeline" id="timeline">
+      <!-- filled by inline data below -->
+      <div class="month" style="background:#cdeafd;"><span class="m-label">JAN</span><span class="m-temp">15.7°</span></div>
+      <div class="month" style="background:#d8e9f6;"><span class="m-label">FEB</span><span class="m-temp">20.2°</span></div>
+      <div class="month" style="background:#f3e3c6;"><span class="m-label">MAR</span><span class="m-temp">26.0°</span></div>
+      <div class="month" style="background:#f3c995;"><span class="m-label">APR</span><span class="m-temp">31.3°</span></div>
+      <div class="month" style="background:#f0a868;"><span class="m-label">MAY</span><span class="m-temp">33.8°</span></div>
+      <div class="month" style="background:#f1ad6d;"><span class="m-label">JUN</span><span class="m-temp">32.4°</span></div>
+      <div class="month" style="background:#f3bb84;"><span class="m-label">JUL</span><span class="m-temp">30.1°</span></div>
+      <div class="month" style="background:#f3c594;"><span class="m-label">AUG</span><span class="m-temp">29.1°</span></div>
+      <div class="month" style="background:#f5d2ac;"><span class="m-label">SEP</span><span class="m-temp">27.0°</span></div>
+      <div class="month" style="background:#f3e3c6;"><span class="m-label">OCT</span><span class="m-temp">22.5°</span></div>
+      <div class="month" style="background:#dcebf5;"><span class="m-label">NOV</span><span class="m-temp">17.3°</span></div>
+      <div class="month" style="background:#cdeafd;"><span class="m-label">DEC</span><span class="m-temp">14.7°</span></div>
+    </div>
+  </div>
+</div>
+
+<section id="findings">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Key findings</h2>
+      <span class="section-num mono">01 — Results</span>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-value heat">+0.33°C</div>
+        <div class="stat-label">Rise in average yearly temperature, 2016 → 2025</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value rain">948–1717mm</div>
+        <div class="stat-label">Range of total monsoon (Jun–Sep) rainfall across the decade</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value heat">33.8°C</div>
+        <div class="stat-label">Hottest average month (May) — slightly hotter than peak monsoon</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value rain">r = 0.19</div>
+        <div class="stat-label">Correlation between daily temperature and rainfall — weak, as expected</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="charts">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>The charts</h2>
+      <span class="section-num mono">02 — Visuals</span>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card full">
+        <img src="assets/figures/02_monthly_temperature_climatology.png" alt="Monthly temperature climatology chart for New Delhi" loading="lazy">
+        <div class="caption">
+          <h3>Monthly temperature climatology</h3>
+          <p>Average max, mean, and min temperature by calendar month — May is the hottest month, slightly ahead of June, with monsoon clouds (Jul–Sep) bringing temperatures down a few degrees before winter sets in.</p>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <img src="assets/figures/01_yearly_temperature_trend.png" alt="Yearly average temperature trend chart" loading="lazy">
+        <div class="caption">
+          <h3>Yearly temperature trend</h3>
+          <p>A gradual warming trend across the decade, though year-to-year noise is larger than the trend itself.</p>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <img src="assets/figures/05_yearly_rainfall.png" alt="Total annual rainfall by year chart" loading="lazy">
+        <div class="caption">
+          <h3>Annual rainfall, year by year</h3>
+          <p>Some years cleared 1700mm; others stayed below 1000mm — a reminder of how unpredictable a single monsoon season can be.</p>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <img src="assets/figures/03_monthly_rainfall.png" alt="Average monthly rainfall bar chart" loading="lazy">
+        <div class="caption">
+          <h3>Where the rain actually falls</h3>
+          <p>June through September alone account for the overwhelming majority of the city's annual rainfall.</p>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <img src="assets/figures/04_temperature_heatmap.png" alt="Year by month temperature heatmap" loading="lazy">
+        <div class="caption">
+          <h3>Year × month heatmap</h3>
+          <p>Every month, every year, at a glance — useful for spotting subtle warming creeping into specific months over time.</p>
+        </div>
+      </div>
+
+      <div class="chart-card full">
+        <img src="assets/figures/06_temp_vs_rainfall_scatter.png" alt="Temperature vs rainfall scatter plot colored by month" loading="lazy">
+        <div class="caption">
+          <h3>Temperature vs. rainfall, day by day</h3>
+          <p>Each dot is one day, colored by month. Rain clusters at moderate-to-warm temperatures during monsoon months (orange/pink) — confirming the weak overall correlation hides a strong seasonal pattern.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="method">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>How it was built</h2>
+      <span class="section-num mono">03 — Method</span>
+    </div>
+
+    <ul class="method-list">
+      <li>
+        <span class="dot"></span>
+        <span><strong>Data:</strong> <span class="desc">10 years of daily temperature (max/min/mean) and rainfall pulled from the free <a href="https://open-meteo.com/en/docs/historical-weather-api" target="_blank">Open-Meteo Historical Weather API</a> — no API key required.</span></span>
+      </li>
+      <li>
+        <span class="dot"></span>
+        <span><strong>Cleaning:</strong> <span class="desc">Missing temperature readings interpolated using time-aware methods; missing rainfall treated as zero (the more defensible assumption for a highly non-smooth variable).</span></span>
+      </li>
+      <li>
+        <span class="dot"></span>
+        <span><strong>Analysis:</strong> <span class="desc">Yearly and monthly aggregation with Pandas, linear trend fitting with NumPy, and a correlation check between daily temperature and rainfall.</span></span>
+      </li>
+      <li>
+        <span class="dot"></span>
+        <span><strong>Visualization:</strong> <span class="desc">All charts built with Matplotlib — a trend line, a climatology curve, a monsoon-highlighted bar chart, a year × month heatmap, and a colored scatter plot.</span></span>
+      </li>
+    </ul>
+
+    <p style="margin-top:28px; font-size:0.9rem; color:#6b6358;">Run it yourself:</p>
+    <pre>pip install -r requirements.txt
+python src/fetch_data.py
+python src/clean_data.py
+python src/analyze.py
+python src/visualize.py</pre>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>Built by <strong>Sahil</strong> — Python data analysis project, 2026.</p>
+    <div class="footer-links">
+      <a href="https://github.com/YOUR_USERNAME/weather-data-analyzer" target="_blank">GitHub repo</a>
+      <a href="https://github.com/YOUR_USERNAME" target="_blank">GitHub profile</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
